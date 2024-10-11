@@ -57,13 +57,13 @@ class DBClient {
         if (!this.isAlive()){
             return 0;
         }
-        const user = await this.db.find({email: email});
+        const user = await this.db.collection('users').findOne({email: email});
         if (user){
             return {'error': 'Already exist'}
         }
         const hashedPw = this.hashPw(password);
         const newUser = {email: email, password: hashedPw};
-        await this.db.users.insertOne(newUser);
+        await this.db.collection('users').insertOne(newUser);
         return newUser;
     }
 }

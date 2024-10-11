@@ -8,16 +8,19 @@ export default class UsersController {
         if (!email){
             return res.status(400).json({'error': 'Missing email'});
         }
-        // const password = req.params.password;
         if (!password){
             return res.status(400).json({'error': 'Missing password'});
         }
         try{
             const newUser = await dbClient.createUser(email, password);
             if (newUser.error){
-                return res.status(400).json(newUser.error);
+                return res.status(400).json({'error': newUser.error});
             }
-            return res.status(201).json({'id': id, 'email': email})
+            console.log(newUser.__proto__);
+            return res.status(201).json({
+                'id': newUser._id,
+                'email': email
+            });
 
         }catch(error){
             res.status(500).send(error.toString());
