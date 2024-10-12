@@ -40,6 +40,7 @@ class DBClient {
         return pwdHash === hashedPw;
     }
     async nbUsers() {
+        // count the number of users.
         if (!this.isAlive()){
             return 0;
         }
@@ -52,6 +53,7 @@ class DBClient {
         }
     }
     async nbFiles() {
+        // count the number of files in the db.
         if (!this.isAlive()){
             return 0;
         }
@@ -64,6 +66,7 @@ class DBClient {
         }
     }
     async findByEmail(email){
+        // retrieve a user based on email.
         if (!this.isAlive()){
             return 0;
         }
@@ -76,18 +79,33 @@ class DBClient {
         }
     }
     async findUsers(){
+        // retrieve all users.
         if (!this.isAlive()){
+            return [];
+        }
+        try{
+            const users = await this.db.collection('users').find().toArray();
+            return users
+        }catch(error){
+            console.error(error);
+            return [];
+        }
+    }
+    async findById(userId){
+        // finds a user based on id.
+        if (!this.isAlive){
             return 0;
         }
         try{
-            const users = await this.db.collection('users').find();
-            return users
+            const users = await this.findUsers();
+            return users.find(user => user._id == userId) || null;
         }catch(error){
             console.error(error);
             return 0;
         }
     }
     async createUser(email, password){
+        // creates a new user.
         if (!this.isAlive()){
             return 0;
         }
@@ -100,6 +118,52 @@ class DBClient {
             const newUser = {email: email, password: hashedPw};
             await this.db.collection('users').insertOne(newUser);
             return newUser;
+        }catch(error){
+            console.error(error);
+            return 0;
+        }
+    }
+    async findFiles(){
+        // retrieves all files.
+        if (!this.isAlive()){
+            return 0;
+        }
+        try{
+            const allFiles = await this.db.collection('files').find().toArray();
+            return allFiles;
+        }catch(error){
+            console.error(error);
+            return [];
+        }
+    }
+    async findFileById(parentId){
+        // retrieve a file based on the id.
+        if (!this.isAlive()){
+            return 0;
+        }
+        try{
+            const allFiles = await this.findFiles();
+            return allFiles.find(file => file._id == parentId) || null;
+        }catch{
+            console.error(error);
+            return 0;
+        }
+    }
+    async createFile(name, type, parentId, isPublic, data){
+        // create a file.
+        if (!this.isAlive()){
+            return 0;
+        }
+        try{
+            const newFile = {
+                            name: name,
+                            type: type,
+                            parentId: parentId || 0,
+                            isPublic: isPublic || false,
+                            data: data
+                        };
+            await this.db.collection('files').insertOne(newFile);
+            return newFile;
         }catch(error){
             console.error(error);
             return 0;

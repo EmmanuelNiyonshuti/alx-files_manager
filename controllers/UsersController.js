@@ -37,16 +37,10 @@ export default class UsersController {
         if (!userId){
             return res.status(401).json({'status': 'Unauthorized'});
         }
-        const users = await dbClient.findUsers();
-        if (!users){
+        const user = await dbClient.findById(userId);
+        if (!user){
             return res.status(401).json({'error': 'unauthorized'});
         }
-        users.forEach(user => {
-            if (user._id == userId){
-                return res.status(200).json({'id': user._id, 'email': user.email});
-            }else{
-                return res.status(401).json({'error': 'unauthorized'});
-            }
-        })
+        return res.status(200).json({'id': user._id, 'email': user.email});
     }
 }
