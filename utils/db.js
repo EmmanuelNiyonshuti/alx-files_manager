@@ -35,36 +35,75 @@ class DBClient {
         return hash;
     }
     checkPw(password, hashedPw){
-        // check the password
-        const hash = crypto.createHash('SHA1').update(password).digest('hex');
-        return hash === hashedPw;
+        // check the passwordhash
+        const pwdHash = this.hashPw(password);
+        return pwdHash === hashedPw;
     }
     async nbUsers() {
         if (!this.isAlive()){
             return 0;
         }
-        const numUsers = await this.db.collection('users').countDocuments();
-        return numUsers;
+        try{
+            const numUsers = await this.db.collection('users').countDocuments();
+            return numUsers;
+        }catch(error){
+            console.error(error);
+            return 0;
+        }
     }
     async nbFiles() {
         if (!this.isAlive()){
             return 0;
         }
-        const numFiles = await this.db.collection('files').countDocuments();
-        return numFiles;
+        try{
+            const numFiles = await this.db.collection('files').countDocuments();
+            return numFiles;
+        }catch(error){
+            console.error(error);
+            return 0;
+        }
+    }
+    async findByEmail(email){
+        if (!this.isAlive()){
+            return 0;
+        }
+        try{
+            const user = await this.db.collection('users').findOne({email: email});
+            return user ? user : 0;
+        }catch(error){
+            console.error(error);
+            return 0;
+        }
+    }
+    async findUsers(){
+        if (!this.isAlive()){
+            return 0;
+        }
+        try{
+            const users = await this.db.collection('users').find();
+            return users
+        }catch(error){
+            console.error(error);
+            return 0;
+        }
     }
     async createUser(email, password){
         if (!this.isAlive()){
             return 0;
         }
-        const user = await this.db.collection('users').findOne({email: email});
-        if (user){
-            return {'error': 'Already exist'}
+        try{
+            const user = await this.findByEmail(email);
+            if (!user){
+                return {'error': 'Already exist'}
+            }
+            const hashedPw = this.hashPw(password);
+            const newUser = {email: email, password: hashedPw};
+            await this.db.collection('users').insertOne(newUser);
+            return newUser;
+        }catch(error){
+            console.error(error);
+            return 0;
         }
-        const hashedPw = this.hashPw(password);
-        const newUser = {email: email, password: hashedPw};
-        await this.db.collection('users').insertOne(newUser);
-        return newUser;
     }
 }
 

@@ -22,8 +22,7 @@ class RedisClient {
             });
         });
     }
-
-    async set(key, val, delay){
+    async setEx(key, delay, val){
         return new Promise((resolve, reject) => {
             this.client.setex(key, delay, val, (err) => {
                 if (err){

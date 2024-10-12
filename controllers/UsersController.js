@@ -1,9 +1,11 @@
 #!/users/bin/node
 
 import dbClient from "../utils/db.js";
+import redisClient from "../utils/redis.js";
 
 export default class UsersController {
     static async PostNew(req, res){
+        // create a new user
         const { email, password } = req.body;
         if (!email){
             return res.status(400).json({'error': 'Missing email'});
@@ -16,14 +18,35 @@ export default class UsersController {
             if (newUser.error){
                 return res.status(400).json({'error': newUser.error});
             }
-            console.log(newUser.__proto__);
             return res.status(201).json({
-                'id': newUser._id,
+            'id': newUser._id,
                 'email': email
             });
-
         }catch(error){
             res.status(500).send(error.toString());
         }
+    }
+    static async getMe(req, res){
+        // retrieve the user based on the token used.
+        const token = req.headers['x-token'];
+        if (!token){
+            return res.status(401).json({'error': 'Unauthorized'});
+        }
+        const key = `auth_${token}`;
+        const userId = await redisClient.get(key);
+        if (!userId){
+            return res.status(401).json({'status': 'Unauthorized'});
+        }
+        const users = await dbClient.findUsers();
+        if (!users){
+            return res.status(401).json({'error': 'unauthorized'});
+        }
+        users.forEach(user => {
+            if (user._id == userId){
+                return res.status(200).json({'id': user._id, 'email': user.email});
+            }else{
+                return res.status(401).json({'error': 'unauthorized'});
+            }
+        })
     }
 }
