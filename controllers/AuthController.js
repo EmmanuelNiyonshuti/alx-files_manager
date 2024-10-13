@@ -11,8 +11,8 @@ export default class AuthController {
         if (!auth || !auth.startsWith('Basic')){
             return res.status(401).json({'error': 'Unauthorized'});
         }
-        const base64 = auth.split(' ')[1];
-        const decodedStr = Buffer.from(base64, 'base64').toString('utf-8');
+        const base64Str = auth.split(' ')[1];
+        const decodedStr = Buffer.from(base64Str, 'base64').toString('utf-8');
         const [email, password] = decodedStr.split(':');
         const user = await dbClient.findByEmail(email);
         if (!user){
@@ -28,17 +28,7 @@ export default class AuthController {
     }
     static async getDisconnect(req, res){
         // signout the user based on the token
-        const token = req.headers['x-token'];
-        console.log(token);
-        if (!token){
-            return res.status(401).json({'error': 'unauthorized'});
-        }
-        const key = `auth_${token}`;
-        const userId = await redisClient.get(key);
-        console.log(userId);
-        if (!userId){
-            return res.status(401).json({'error': 'unauthorized'});
-        }
+        const key = req.key;
         await redisClient.del(key);
         return res.status(204).json({});
     }

@@ -1,19 +1,23 @@
 #!/usr/bin/node
 
 import express from 'express';
+import authenticateUser from '../middleware/auth.js';
 import AppController from '../controllers/AppController.js';
 import UsersController from '../controllers/UsersController.js'
 import AuthController from '../controllers/AuthController.js';
 import FilesController from '../controllers/FilesController.js'
+import { validJson } from '../middleware/errorHandlers.js';
 
 const router = express.Router();
 
 router.get('/status', AppController.getStatus);
 router.get('/stats', AppController.getStats);
-router.post('/users', UsersController.PostNew);
+router.post('/users', validJson, UsersController.PostNew);
 router.get('/connect', AuthController.getConnect);
 router.get('/disconnect', AuthController.getDisconnect);
-router.get('/users/me', UsersController.getMe);
-router.post('/files', FilesController.postUpload);
+router.get('/users/me', authenticateUser, UsersController.getMe);
+router.post('/files', validJson, authenticateUser, FilesController.postUpload);
+router.get('/files/:id', authenticateUser, FilesController.getShow);
+router.get('/files', authenticateUser, FilesController.getIndex);
 
 export default router;

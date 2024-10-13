@@ -111,8 +111,8 @@ class DBClient {
         }
         try{
             const user = await this.findByEmail(email);
-            if (!user){
-                return {'error': 'Already exist'}
+            if (user){
+                return {'error': 'Already exists'};
             }
             const hashedPw = this.hashPw(password);
             const newUser = {email: email, password: hashedPw};

@@ -1,7 +1,6 @@
 #!/users/bin/node
 
 import dbClient from "../utils/db.js";
-import redisClient from "../utils/redis.js";
 
 export default class UsersController {
     static async PostNew(req, res){
@@ -20,7 +19,7 @@ export default class UsersController {
             }
             return res.status(201).json({
             'id': newUser._id,
-                'email': email
+            'email': email
             });
         }catch(error){
             res.status(500).send(error.toString());
@@ -28,19 +27,7 @@ export default class UsersController {
     }
     static async getMe(req, res){
         // retrieve the user based on the token used.
-        const token = req.headers['x-token'];
-        if (!token){
-            return res.status(401).json({'error': 'Unauthorized'});
-        }
-        const key = `auth_${token}`;
-        const userId = await redisClient.get(key);
-        if (!userId){
-            return res.status(401).json({'status': 'Unauthorized'});
-        }
-        const user = await dbClient.findById(userId);
-        if (!user){
-            return res.status(401).json({'error': 'unauthorized'});
-        }
+        const user = req.user;
         return res.status(200).json({'id': user._id, 'email': user.email});
     }
 }

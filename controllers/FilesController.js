@@ -7,16 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default class FilesController {
     static async postUpload(req, res){
-        const token = req.headers['x-token'];
-        if (!token){
-            return res.status(401).json({'error': 'Unauthorized'});
-        }
-        const key = `auth_${token}`;
-        const userId = await redisClient.get(key);
-        const user = await dbClient.findById(userId);
-        if (!user){
-            return res.status(401).json({'error': 'Unauthorized'});
-        }
         const { name, type, parentId=0, isPublic=false, data } = req.body;
         if (!name){
             return res.status(400).json({'error': 'Missing name'});
@@ -42,7 +32,7 @@ export default class FilesController {
                 type,
                 parentId,
                 isPublic,
-                user._id
+                req.user._id
             );
             return res.status(201).json({
                 'id': newFile._id,
@@ -66,10 +56,8 @@ export default class FilesController {
             parentId,
             isPublic,
             filePath,
-            user._id
+            req.user._id
         );
-        console.log(newFile.name);
-        console.log(newFile.type)
         return res.status(201).json({
             'id': newFile._id,
             'userId': newFile.userId,
@@ -78,5 +66,18 @@ export default class FilesController {
             'isPublic': newFile.isPublic,
             'parentId': newFile.parentId
         });
+    }
+    static async getShow(req, res){
+        const fileId = req.params.id;
+        const file = await dbClient.findFileById(fileId);
+        if (file === null){
+            return res.status(404).json({'error': 'Not found'});
+        }
+        if (file._id != user._id){
+            return res.status(404).json({'error': 'Not found'});
+        }
+    }
+    static async getIndex(req, res){
+        
     }
 }
