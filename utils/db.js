@@ -25,7 +25,6 @@ class DBClient {
             this.connected = true;
             }
         )}
-
     isAlive(){
         return this.connected;
     }
@@ -149,6 +148,19 @@ class DBClient {
             return [];
         }
     }
+    async findFileByParentId(parentId){
+        // retrieves a files by it's parentId
+        if (!this.isAlive){
+            return 0;
+        }
+        try{
+            const files = await this.findFiles();
+            return files.find(file => file.parentId == parentId) || null;
+        }catch(error){
+            console.error(error);
+            return [];
+        }
+    }
     async findFileById(fileId){
         // finds a user based on id.
         if (!this.isAlive){
@@ -159,7 +171,7 @@ class DBClient {
             return files.find(file => file._id == fileId) || null;
         }catch(error){
             console.error(error);
-            return 0;
+            return [];
         }
     }
     async findFileByName(name){
