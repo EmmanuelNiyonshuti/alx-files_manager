@@ -134,13 +134,9 @@ export default class FilesController {
     const page = parseInt(req.query.page) || 0;
     const limit = 20;
     try {
-        const query = { userId: userId.toString(), parentId: parentId };
-        const { total, files } = await dbClient.filterFiles(query, page, limit);
-        return res.status(200).json({
-            total,
-            page,
-            files
-        });
+        const query = { userId: userId, parentId: parentId };
+        const files = await dbClient.filterFiles(query, page, limit);
+        return res.status(200).json(files);
     } catch (error) {
         return res.status(500).json({ error: 'Internal Server Error' });
     }

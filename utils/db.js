@@ -144,7 +144,7 @@ class DBClient {
                 isPublic: file.isPublic,
                 parentId: file.parentId  
             }));
-            return { total, files: transformedFiles };
+            return transformedFiles;
         }catch(error){
             console.error(error);
             return [];
