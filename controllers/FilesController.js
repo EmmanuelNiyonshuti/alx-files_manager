@@ -141,4 +141,62 @@ export default class FilesController {
         return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
+  static async putPublish(req, res){
+    // update a file (set's isPublic property to true)
+    const token = req.headers['x-token'];
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const user = await dbClient.findById(userId);
+    if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      const fileId = req.params.id;
+      if (!fileId){
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const file = await dbClient.findFileById(fileId);
+    if (!file){
+      return res.status(401).json({ error: 'Not found' });
+    }
+    if (file.userId != user._id){
+      return res.status(401).json({ error: 'Not found' });
+    }
+    file.isPublic = true;
+    return res.status(200).json(file);
+  }
+  static async putUnpublish(req, res){
+    // update a file (set's isPublic property to false)
+    const token = req.headers['x-token'];
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const user = await dbClient.findById(userId);
+    if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      const fileId = req.params.id;
+      if (!fileId){
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const file = await dbClient.findFileById(fileId);
+    if (!file){
+      return res.status(401).json({ error: 'Not found' });
+    }
+    if (file.userId != user._id){
+      return res.status(401).json({ error: 'Not found' });
+    }
+    file.isPublic = false;
+    return res.status(200).json(file);
+  }
 }
