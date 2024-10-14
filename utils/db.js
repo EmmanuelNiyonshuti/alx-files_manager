@@ -187,22 +187,40 @@ class DBClient {
             return 0;
         }
     }
-    async createFile(name, type, parentId, isPublic, data, userId){
-        // create a file.
+    async createFolder(name, type, parentId, isPublic, userId){
+        // creates a folder.
         if (!this.isAlive()){
             return 0;
         }
         try{
-            const newFile = {
-                            name: name,
-                            type: type,
-                            parentId: parentId || 0,
-                            isPublic: isPublic || false,
-                            data: data,
-                            userId: userId
-                        };
-            await this.db.collection('files').insertOne(newFile);
-            return newFile;
+            const result = await this.db.collection('files').insertOne({
+                    name,
+                    type,
+                    parentId,
+                    isPublic,
+                    userId,
+                });
+            return result.ops[0];
+        }catch(error){
+            console.error(error);
+            return 0;
+        }
+    }
+    async createFile(name, type, parentId, isPublic, userId, localPath){
+        // creates a file.
+        if (!this.isAlive()){
+            return 0;
+        }
+        try{
+            const result = await this.db.collection('files').insertOne({
+                    name,
+                    type,
+                    parentId,
+                    isPublic,
+                    userId,
+                    localPath
+                });
+            return result.ops[0];
         }catch(error){
             console.error(error);
             return 0;
