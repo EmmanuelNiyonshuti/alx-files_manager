@@ -3,6 +3,7 @@
 
 import mongodb from 'mongodb';
 import crypto from 'crypto';
+import { resourceLimits } from 'worker_threads';
 
 const DB_HOST = process.env.DB_HOST || '127.0.0.1';
 const DB_PORT = process.env.DB_PORT || 27017;
@@ -122,14 +123,28 @@ class DBClient {
             return 0;
         }
     }
-    async filterFiles(query){
+    async filterFiles(query, page = 0, limit = 20){
         // retrieves files based on the provided query.
         if (!this.isAlive()){
             return 0;
         }
         try{
-            const allFiles = await this.db.collection('files').find(query);
-            return allFiles;
+            const skip = page * limit;
+            const collection = this.db.collection('files');
+            const total = await collection.countDocuments(query);
+            const files = await collection.find(query)
+                    .skip(skip)
+                    .limit(limit)
+                    .toArray();
+            const transformedFiles = files.map(file => ({
+                id: file._id.toString(),
+                userId: file.userId,
+                name: file.name,
+                type: file.type,
+                isPublic: file.isPublic,
+                parentId: file.parentId  
+            }));
+            return { total, files: transformedFiles };
         }catch(error){
             console.error(error);
             return [];

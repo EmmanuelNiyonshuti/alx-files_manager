@@ -57,7 +57,7 @@ export default class FilesController {
             name: newFolder.name,
             type: newFolder.type,
             isPublic: newFolder.isPublic,
-            parentId: newFolder.parentId,
+            parentId: newFolder.parentId
           });
         }
         const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
@@ -81,12 +81,28 @@ export default class FilesController {
           name: newFile.name,
           type: newFile.type,
           isPublic: newFile.isPublic,
-          parentId: newFile.parentId,
+          parentId: newFile.parentId
         });
     }
   static async getShow(req, res) {
-    const { user } = req;
+    // fetch a specific file using it's Id.
+    const token = req.headers['x-token'];
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const user = await dbClient.findById(userId);
+    if (!user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const fileId = req.params.id;
+    if (!fileId){
+      return res.status(404).json({ error: 'Not found' });
+    }
     const file = await dbClient.findFileById(fileId);
     if (!file || file.userId != user._id) {
       return res.status(404).json({ error: 'Not found' });
@@ -96,22 +112,37 @@ export default class FilesController {
       name: file.name,
       type: file.type,
       isPublic: file.isPublic,
-      parentId: file.parentId,
+      parentId: file.parentId
     });
   }
-
   static async getIndex(req, res) {
-    const { user } = req;
-    const parentId = req.query.parentId || 0;
+    // retrieve a list of files belonging to the authenticated user.
+    const token = req.headers['x-token'];
+    if (!token) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const user = await dbClient.findById(userId);
+    if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const parentId = req.query.parentId || '0';
     const page = parseInt(req.query.page) || 0;
     const limit = 20;
-    const skip = page * limit;
-
-    const query = {
-      userId: user._id,
-      parentId,
-    };
-    const files = await dbClient.filterFiles(query).skip(skip).limit(limit).toArray();
-    return res.status(200).json(files);
+    try {
+        const query = { userId: userId.toString(), parentId: parentId };
+        const { total, files } = await dbClient.filterFiles(query, page, limit);
+        return res.status(200).json({
+            total,
+            page,
+            files
+        });
+    } catch (error) {
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 }
