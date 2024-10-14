@@ -17,7 +17,8 @@ router.post('/users', validJson, UsersController.PostNew);
 router.get('/connect', AuthController.getConnect);
 router.get('/disconnect', AuthController.getDisconnect);
 router.get('/users/me', authenticateUser, UsersController.getMe);
-router.post('/files', validJson, authenticateUser, FilesController.postUpload);
+// router.post('/files', validJson, authenticateUser, FilesController.postUpload);
+router.post('/files', validJson, FilesController.postUpload);
 router.get('/files/:id', authenticateUser, FilesController.getShow);
 router.get('/files', authenticateUser, FilesController.getIndex);
 
