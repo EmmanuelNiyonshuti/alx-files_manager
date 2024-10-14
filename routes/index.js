@@ -1,4 +1,5 @@
 #!/usr/bin/node
+// comprises all application routes.
 
 import express from 'express';
 import authenticateUser from '../middleware/auth.js';
@@ -6,7 +7,7 @@ import AppController from '../controllers/AppController.js';
 import UsersController from '../controllers/UsersController.js'
 import AuthController from '../controllers/AuthController.js';
 import FilesController from '../controllers/FilesController.js'
-import { validJson } from '../middleware/errorHandlers.js';
+import { validJson, validateJson } from '../middleware/errorHandlers.js';
 
 const router = express.Router();
 

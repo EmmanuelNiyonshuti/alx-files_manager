@@ -1,5 +1,5 @@
 #!/usr/bin/node
-//
+// authenticate a user.
 import { v4 as uuidv4 } from 'uuid';
 import dbClient from "../utils/db.js";
 import redisClient from '../utils/redis.js';
@@ -28,9 +28,18 @@ export default class AuthController {
     }
     static async getDisconnect(req, res){
         // signout the user based on the token
-        const key = req.key;
+        // const key = req.key; // Using middleware to get 'key', 
+        // but project requirements expect token handling here.
+        const token = req.headers['x-token'];
+        if (!token){
+            return res.status(401).json({'error': 'Unauthorized'});
+        }
+        const key = `_auth${token}`;
+        const userId = await redisClient.get(key);
+        if (!userId){
+            return res.status(401).json({'error': 'unauthorized'});
+        }
         await redisClient.del(key);
         return res.status(204).json({});
     }
 }
-

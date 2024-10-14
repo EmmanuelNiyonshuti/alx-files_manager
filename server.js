@@ -1,5 +1,5 @@
 #!/usr/bin/node
-
+// application entry point
 import express from 'express';
 import router from './routes/index.js';
 import logger from './middleware/logger.js';

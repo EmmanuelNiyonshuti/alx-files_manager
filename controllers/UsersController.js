@@ -27,7 +27,21 @@ export default class UsersController {
     }
     static async getMe(req, res){
         // retrieve the user based on the token used.
-        const user = req.user;
+        // const user = req.user; Using middleware to retrieve 'user', 
+        // but project requirements expect token handling here.
+        const token = req.headers['x-token'];
+        if (!token){
+            return res.status(401).json({'error': 'Unauthorized'});
+        }
+        const key = `auth_${token}`;
+        const userId = await redisClient.get(key);
+        if (!userId){
+            return res.status(401).json({'error': 'unauthorized'});
+        }
+        const user = await dbClient.findById(userId);
+        if (!user){
+            return res.status(401).json({'error': 'Unauthorized'});
+        }
         return res.status(200).json({'id': user._id, 'email': user.email});
     }
 }

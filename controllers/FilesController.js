@@ -1,28 +1,33 @@
 #!/usr/bin/node
 // implements files controller.
 import dbClient from "../utils/db.js";
-import redisClient from "../utils/redis.js";
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 
 export default class FilesController {
     static async postUpload(req, res){
+        const user = req.user;
         const { name, type, parentId=0, isPublic=false, data } = req.body;
         if (!name){
             return res.status(400).json({'error': 'Missing name'});
         }
-        if (!type || !['folder', 'file', 'image'].includes(type)){
+        const file = await dbClient.findFileByName(name);
+        if (file){
+            return res.status(400).json({'error': 'already exists'});
+        }
+        const acceptedTypes = ['folder', 'file', 'image'];
+        if (!type || !acceptedTypes.includes(type)){
             return res.status(400).json({'error': 'Missing type'});
         }
         if(!data && type !== 'folder'){
             return res.status(400).json({'error': 'Missing data'});
         }
         if (parentId !== 0){
-            const parentFile = await dbClient.findFileById(parentId);
-            if (!parentFile){
+            const file = await dbClient.findFileById(parentId);
+            if (!file){
                 return res.status(400).json({'error': 'Parent not found'});
             }
-            if (parentFile.type != 'folder'){
+            if (file.type != 'folder'){
                 return res.status(400).json({'error': 'Parent is not folder'});
             }
         }
@@ -32,7 +37,7 @@ export default class FilesController {
                 type,
                 parentId,
                 isPublic,
-                req.user._id
+                user._id
             );
             return res.status(201).json({
                 'id': newFile._id,
@@ -55,8 +60,8 @@ export default class FilesController {
             type,
             parentId,
             isPublic,
-            filePath,
-            req.user._id
+            user._id,
+            filePath
         );
         return res.status(201).json({
             'id': newFile._id,
@@ -77,7 +82,33 @@ export default class FilesController {
             return res.status(404).json({'error': 'Not found'});
         }
     }
+    static async getShow(req, res){
+        const user = req.user;
+        const fileId = req.params.id;
+        const file = await dbClient.findFileById(fileId);
+        if (!file || file.userId != user._id){
+            return res.status(404).json({ 'error': 'Not found' });
+        }
+        return res.status(200).json({
+            'id': file._id,
+            'name': file.name,
+            'type': file.type,
+            'isPublic': file.isPublic,
+            'parentId': file.parentId
+        });
+    }
     static async getIndex(req, res){
-        
+        const user = req.user;
+        const parentId = req.query.parentId || 0;
+        const page = parseInt(req.query.page) || 0;
+        const limit = 20;
+        const skip = page * limit;
+
+        const query = {
+            userId: user._id,
+            parentId: parentId
+        }
+        const files = await dbClient.filterFiles(query).skip(skip).limit(limit).toArray();
+        return res.status(200).json(files);
     }
 }

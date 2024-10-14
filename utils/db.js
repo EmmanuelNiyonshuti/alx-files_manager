@@ -123,6 +123,19 @@ class DBClient {
             return 0;
         }
     }
+    async filterFiles(query){
+        // retrieves files based on the provided query.
+        if (!this.isAlive()){
+            return 0;
+        }
+        try{
+            const allFiles = await this.db.collection('files').find(query);
+            return allFiles;
+        }catch(error){
+            console.error(error);
+            return [];
+        }
+    }
     async findFiles(){
         // retrieves all files.
         if (!this.isAlive()){
@@ -136,20 +149,33 @@ class DBClient {
             return [];
         }
     }
-    async findFileById(parentId){
+    async findFileById(fileId){
+        // finds a user based on id.
+        if (!this.isAlive){
+            return 0;
+        }
+        try{
+            const files = await this.findFiles();
+            return files.find(file => file._id == fileId) || null;
+        }catch(error){
+            console.error(error);
+            return 0;
+        }
+    }
+    async findFileByName(name){
         // retrieve a file based on the id.
         if (!this.isAlive()){
             return 0;
         }
         try{
             const allFiles = await this.findFiles();
-            return allFiles.find(file => file._id == parentId) || null;
+            return allFiles.find(file => file.name == name) || null;
         }catch{
             console.error(error);
             return 0;
         }
     }
-    async createFile(name, type, parentId, isPublic, data){
+    async createFile(name, type, parentId, isPublic, data, userId){
         // create a file.
         if (!this.isAlive()){
             return 0;
@@ -160,7 +186,8 @@ class DBClient {
                             type: type,
                             parentId: parentId || 0,
                             isPublic: isPublic || false,
-                            data: data
+                            data: data,
+                            userId: userId
                         };
             await this.db.collection('files').insertOne(newFile);
             return newFile;
