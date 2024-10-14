@@ -38,7 +38,7 @@ export default class UsersController {
     const key = `auth_${token}`;
     const userId = await redisClient.get(key);
     if (!userId) {
-      return res.status(401).json({ error: 'unauthorized' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
     const user = await dbClient.findById(userId);
     if (!user) {
